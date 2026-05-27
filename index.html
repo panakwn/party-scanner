@@ -138,9 +138,45 @@
       margin-top: 16px;
       line-height: 1.4;
     }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-140%);
+      width: calc(100% - 30px);
+      max-width: 520px;
+      padding: 18px;
+      border-radius: 16px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      color: white;
+      z-index: 9999;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      transition: transform 0.25s ease;
+    }
+
+    .notification.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .notification.ok {
+      background: #16a34a;
+    }
+
+    .notification.bad {
+      background: #dc2626;
+    }
+
+    .notification.info {
+      background: #2563eb;
+    }
   </style>
 </head>
 <body>
+  <div id="notification" class="notification"></div>
+
   <div class="container">
     <h1>Party QR Scanner</h1>
 
@@ -213,6 +249,20 @@
     const redCount = document.getElementById("redCount");
     const totalCount = document.getElementById("totalCount");
     const statusBox = document.getElementById("status");
+    const notification = document.getElementById("notification");
+
+    function showNotification(message, type = "info") {
+      notification.textContent = message;
+      notification.className = `notification ${type} show`;
+
+      if (navigator.vibrate) {
+        navigator.vibrate(type === "ok" ? 120 : [120, 80, 120]);
+      }
+
+      setTimeout(() => {
+        notification.classList.remove("show");
+      }, 1800);
+    }
 
     function setStatus(message, type = "normal") {
       statusBox.textContent = message;
@@ -330,16 +380,19 @@
 
       if (decodedText === GREEN_QR) {
         await addScan("green");
-        setStatus("FRIENDS scan accepted.", "success");
+        showNotification("✅ VALID FRIENDS QR - +1 άτομο", "ok");
+        setStatus("FRIENDS scan accepted., "success");
         return;
       }
 
       if (decodedText === RED_QR) {
         await addScan("red");
-        setStatus("FRIENDS OF FRIENDS scan accepted.", "success");
+        showNotification("✅ VALID FRIENDS OF FRIENDS QR - +1 άτομο", "ok");
+        setStatus("FRIENDS OF FRIENDS scan accepted., "success");
         return;
       }
 
+      showNotification("❌ INVALID QR - δεν μετρήθηκε", "bad");
       setStatus(`Άκυρο QR. Διάβασε: ${decodedText}`, "error");
     }
 
