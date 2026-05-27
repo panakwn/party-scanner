@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GANAPEM Party Scanner</title>
+  <meta name="theme-color" content="#000000" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <script src="https://unpkg.com/html5-qrcode"></script>
 
@@ -11,6 +14,11 @@
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      background-color: #000000;
     }
 
     :root {
@@ -55,7 +63,7 @@
       color: var(--text);
       display: flex;
       justify-content: center;
-      padding: 18px;
+      padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
     }
 
     body::before {
@@ -989,8 +997,8 @@
 
           setTimeout(async () => {
             await stopScanner();
-            scannerOverlay.classList.remove("open");
-          }, 650);
+            window.location.reload();
+          }, 850);
         } catch (error) {
           console.error(error);
           scanLocked = false;
@@ -1012,8 +1020,8 @@
 
           setTimeout(async () => {
             await stopScanner();
-            scannerOverlay.classList.remove("open");
-          }, 650);
+            window.location.reload();
+          }, 850);
         } catch (error) {
           console.error(error);
           scanLocked = false;
