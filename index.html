@@ -339,15 +339,10 @@
       color: rgba(255, 225, 225, 0.92);
     }
 
-    .buttons,
-    .scanner-actions {
+    .buttons {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .scanner-actions.single-action {
       grid-template-columns: 1fr;
+      gap: 10px;
     }
 
     button {
@@ -376,12 +371,6 @@
       color: rgba(222, 238, 255, 0.96);
     }
 
-    .undo-btn {
-      background: linear-gradient(145deg, var(--amber-soft), rgba(255,255,255,0.05));
-      border-color: rgba(251,191,36,0.32);
-      color: rgba(255, 244, 214, 0.96);
-    }
-
     .reset-btn {
       background: linear-gradient(145deg, var(--danger-soft), rgba(255,255,255,0.05));
       border-color: rgba(248,113,113,0.32);
@@ -396,42 +385,76 @@
       text-align: center;
     }
 
-    .notification {
-      position: fixed;
-      top: 18px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-150%);
-      width: calc(100% - 28px);
-      max-width: 540px;
-      border-radius: 999px;
-      padding: 15px 18px;
+    .reader-wrap {
+      position: relative;
+      width: fit-content;
+      max-width: 100%;
+      margin: 0 auto;
+    }
+
+    .scan-result {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.96);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      border-radius: var(--radius-lg);
       text-align: center;
+      padding: 18px;
+      backdrop-filter: blur(18px) saturate(160%);
+      -webkit-backdrop-filter: blur(18px) saturate(160%);
+    }
+
+    .scan-result.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .scan-result.valid {
+      background: rgba(4, 120, 87, 0.54);
+      border: 1px solid rgba(110, 231, 183, 0.38);
+    }
+
+    .scan-result.invalid {
+      background: rgba(127, 29, 29, 0.66);
+      border: 1px solid rgba(252, 165, 165, 0.42);
+    }
+
+    .scan-result-icon {
+      width: 74px;
+      height: 74px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
       font-weight: 900;
-      z-index: 9999;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 18px 52px rgba(0, 0, 0, 0.42);
-      transition: transform 0.25s ease;
-      border: 1px solid var(--stroke);
-      backdrop-filter: blur(28px) saturate(180%);
-      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      line-height: 1;
+      background: rgba(255,255,255,0.12);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 18px 45px rgba(0,0,0,0.28);
     }
 
-    .notification.show {
-      transform: translateX(-50%) translateY(0);
+    .scan-result.valid .scan-result-icon {
+      color: rgba(220, 252, 231, 0.98);
     }
 
-    .notification.ok {
-      background: linear-gradient(145deg, rgba(52,211,153,0.28), rgba(255,255,255,0.08));
-      color: rgba(225, 255, 242, 0.96);
+    .scan-result.invalid .scan-result-icon {
+      color: rgba(254, 226, 226, 0.98);
     }
 
-    .notification.bad {
-      background: linear-gradient(145deg, rgba(248,113,113,0.28), rgba(255,255,255,0.08));
-      color: rgba(255, 230, 230, 0.96);
-    }
-
-    .notification.info {
-      background: linear-gradient(145deg, rgba(96,165,250,0.26), rgba(255,255,255,0.08));
-      color: rgba(225, 240, 255, 0.96);
+    .scan-result-text {
+      max-width: 280px;
+      color: rgba(255,255,255,0.94);
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1.25;
+      text-shadow: 0 2px 14px rgba(0,0,0,0.35);
     }
 
     .scanner-overlay {
@@ -663,7 +686,7 @@
   </style>
 </head>
 <body>
-  <div id="notification" class="notification"></div>
+
 
   <div id="scannerOverlay" class="scanner-overlay">
     <div class="scanner-window">
@@ -688,13 +711,17 @@
       </div>
 
       <div id="scannerStatus" class="scanner-status">Άνοιγμα κάμερας...</div>
-      <div id="reader"></div>
-
-
-
-      <div class="scanner-actions single-action">
-        <button class="undo-btn" onclick="undoLastScan()">Undo Last</button>
+      <div class="reader-wrap">
+        <div id="reader"></div>
+        <div id="scanResult" class="scan-result">
+          <div id="scanResultIcon" class="scan-result-icon">✓</div>
+          <div id="scanResultText" class="scan-result-text">Valid QR</div>
+        </div>
       </div>
+
+
+
+
     </div>
   </div>
 
@@ -729,7 +756,6 @@
 
       <div class="buttons">
         <button class="scan-btn" onclick="openScannerWindow()">Open Scanner</button>
-        <button class="undo-btn" onclick="undoLastScan()">Undo Last</button>
         <button class="reset-btn" onclick="resetCounts()">Reset</button>
       </div>
 
@@ -765,7 +791,6 @@
 
     let html5QrCode = null;
     let scannerRunning = false;
-    let lastScan = null;
     let scanLocked = false;
 
     const greenCount = document.getElementById("greenCount");
@@ -776,7 +801,9 @@
     const modalTotalCount = document.getElementById("modalTotalCount");
     const statusBox = document.getElementById("status");
     const scannerStatus = document.getElementById("scannerStatus");
-    const notification = document.getElementById("notification");
+    const scanResult = document.getElementById("scanResult");
+    const scanResultIcon = document.getElementById("scanResultIcon");
+    const scanResultText = document.getElementById("scanResultText");
     const decodedTextBox = document.getElementById("decodedText");
     const modalDecodedTextBox = document.getElementById("modalDecodedText");
     const scannerOverlay = document.getElementById("scannerOverlay");
@@ -785,17 +812,18 @@
       return String(text || "").trim();
     }
 
-    function showNotification(message, type = "info") {
-      notification.textContent = message;
-      notification.className = `notification ${type} show`;
+    function showScanResult(message, type = "valid") {
+      scanResultText.textContent = message;
+      scanResultIcon.textContent = type === "invalid" ? "×" : "✓";
+      scanResult.className = `scan-result ${type} show`;
 
       if (navigator.vibrate) {
-        navigator.vibrate(type === "ok" ? 120 : [120, 80, 120]);
+        navigator.vibrate(type === "valid" ? 120 : [120, 80, 120]);
       }
+    }
 
-      setTimeout(() => {
-        notification.classList.remove("show");
-      }, 1700);
+    function hideScanResult() {
+      scanResult.classList.remove("show");
     }
 
     function setStatus(message, type = "normal") {
@@ -868,8 +896,6 @@
           });
         }
       });
-
-      lastScan = type;
     }
 
     async function stopScanner() {
@@ -917,50 +943,15 @@
         );
 
         scannerRunning = true;
-        showNotification("Scanner started", "info");
+        hideScanResult();
         setScannerStatus("Scanner ενεργός. Σκάναρε QR.", "success");
         setStatus("Scanner ενεργός μέσα στο παράθυρο.", "success");
       } catch (error) {
         console.error(error);
-        showNotification("Camera error", "bad");
+        showScanResult("Camera error. Δώσε άδεια στην κάμερα.", "invalid");
         setScannerStatus("Δεν άνοιξε η κάμερα. Δώσε camera permission ή δοκίμασε Chrome/Safari.", "error");
         setStatus("Δεν άνοιξε η κάμερα.", "error");
       }
-    };
-
-    window.undoLastScan = async function () {
-      if (!lastScan) {
-        showNotification("Δεν υπάρχει τελευταίο scan", "bad");
-        setStatus("Δεν υπάρχει τελευταίο scan για undo.", "error");
-        setScannerStatus("Δεν υπάρχει τελευταίο scan για undo.", "error");
-        return;
-      }
-
-      await runTransaction(db, async (transaction) => {
-        const snap = await transaction.get(counterRef);
-        const data = snap.exists() ? snap.data() : { green: 0, red: 0, total: 0 };
-
-        let green = data.green || 0;
-        let red = data.red || 0;
-        let total = data.total || 0;
-
-        if (lastScan === "friends" && green > 0) {
-          green -= 1;
-          total -= 1;
-        }
-
-        if (lastScan === "friends_of_friends" && red > 0) {
-          red -= 1;
-          total -= 1;
-        }
-
-        transaction.set(counterRef, { green, red, total });
-      });
-
-      showNotification("Undo successful", "info");
-      setStatus("Έγινε undo στο τελευταίο scan.", "success");
-      setScannerStatus("Έγινε undo στο τελευταίο scan.", "success");
-      lastScan = null;
     };
 
     window.resetCounts = async function () {
@@ -973,8 +964,7 @@
         total: 0
       });
 
-      lastScan = null;
-      showNotification("Counts reset", "info");
+      showScanResult("Counts reset", "valid");
       setStatus("Τα counts μηδενίστηκαν.", "success");
       setScannerStatus("Τα counts μηδενίστηκαν.", "success");
     };
@@ -991,7 +981,7 @@
 
         try {
           await addScan("friends");
-          showNotification("✅ VALID FRIENDS QR - +1 άτομο", "ok");
+          showScanResult("✓ FRIENDS +1", "valid");
           setScannerStatus("Έγκυρο FRIENDS QR. Προστέθηκε 1 άτομο. Το παράθυρο κλείνει.", "success");
           setStatus("Έγκυρο FRIENDS QR. Προστέθηκε 1 άτομο.", "success");
 
@@ -1002,7 +992,7 @@
         } catch (error) {
           console.error(error);
           scanLocked = false;
-          showNotification("⚠️ VALID QR αλλά δεν γράφτηκε στη βάση", "bad");
+          showScanResult("VALID QR αλλά δεν γράφτηκε στη βάση", "invalid");
           setScannerStatus(`Το QR είναι σωστό, αλλά το Firebase δεν το αποθήκευσε: ${error.message}`, "error");
         }
 
@@ -1014,7 +1004,7 @@
 
         try {
           await addScan("friends_of_friends");
-          showNotification("✅ VALID FRIENDS OF FRIENDS QR - +1 άτομο", "ok");
+          showScanResult("✓ FRIENDS OF FRIENDS +1", "valid");
           setScannerStatus("Έγκυρο FRIENDS OF FRIENDS QR. Προστέθηκε 1 άτομο. Το παράθυρο κλείνει.", "success");
           setStatus("Έγκυρο FRIENDS OF FRIENDS QR. Προστέθηκε 1 άτομο.", "success");
 
@@ -1025,14 +1015,14 @@
         } catch (error) {
           console.error(error);
           scanLocked = false;
-          showNotification("⚠️ VALID QR αλλά δεν γράφτηκε στη βάση", "bad");
+          showScanResult("VALID QR αλλά δεν γράφτηκε στη βάση", "invalid");
           setScannerStatus(`Το QR είναι σωστό, αλλά το Firebase δεν το αποθήκευσε: ${error.message}`, "error");
         }
 
         return;
       }
 
-      showNotification("❌ INVALID QR - δεν μετρήθηκε", "bad");
+      showScanResult("Invalid QR. Δεν μετρήθηκε. Δοκίμασε άλλο QR.", "invalid");
       setScannerStatus("Άκυρο QR. Δεν μετρήθηκε. Δοκίμασε άλλο QR.", "error");
 
       setTimeout(() => {
