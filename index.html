@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Party QR Scanner</title>
+
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: white;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+      background: #1c1c1c;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      font-size: 26px;
+    }
+
+    .counts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .card {
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .green {
+      background: #14532d;
+    }
+
+    .red {
+      background: #7f1d1d;
+    }
+
+    .total {
+      background: #333;
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 16px;
+    }
+
+    .number {
+      display: block;
+      font-size: 38px;
+      margin-top: 8px;
+    }
+
+    #reader {
+      background: white;
+      border-radius: 14px;
+      overflow: hidden;
+      margin: 16px 0;
+    }
+
+    .status {
+      padding: 14px;
+      border-radius: 12px;
+      background: #2b2b2b;
+      margin-bottom: 14px;
+      text-align: center;
+      min-height: 50px;
+    }
+
+    .success {
+      background: #14532d;
+    }
+
+    .error {
+      background: #7f1d1d;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .scan-btn {
+      background: #2563eb;
+      color: white;
+      grid-column: span 2;
+    }
+
+    .undo-btn {
+      background: #f59e0b;
+      color: black;
+    }
+
+    .reset-btn {
+      background: #dc2626;
+      color: white;
+    }
+
+    .small {
+      font-size: 13px;
+      color: #aaa;
+      text-align: center;
+      margin-top: 16px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Party QR Scanner</h1>
+
+    <div class="counts">
+      <div class="card green">
+        GREEN
+        <span id="greenCount" class="number">0</span>
+      </div>
+
+      <div class="card red">
+        RED
+        <span id="redCount" class="number">0</span>
+      </div>
+    </div>
+
+    <div class="total">
+      TOTAL: <span id="totalCount">0</span>
+    </div>
+
+    <div id="status" class="status">Πάτα Start Scanner για να ξεκινήσεις.</div>
+
+    <div id="reader"></div>
+
+    <div class="buttons">
+      <button class="scan-btn" onclick="startScanner()">Start Scanner</button>
+      <button class="undo-btn" onclick="undoLastScan()">Undo Last</button>
+      <button class="reset-btn" onclick="resetCounts()">Reset</button>
+    </div>
+
+    <div class="small">
+      Accepted QR codes:<br>
+      KOSTAS_PARTY_2026_GREEN_ACCESS<br>
+      KOSTAS_PARTY_2026_RED_ACCESS
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+    import {
+      getFirestore,
+      doc,
+      onSnapshot,
+      runTransaction,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+
+    // ΒΑΛΕ ΕΔΩ ΤΟ ΔΙΚΟ ΣΟΥ FIREBASE CONFIG
+    const firebaseConfig = {
+      apiKey: "PASTE_YOUR_API_KEY_HERE",
+      authDomain: "PASTE_YOUR_AUTH_DOMAIN_HERE",
+      projectId: "PASTE_YOUR_PROJECT_ID_HERE",
+      storageBucket: "PASTE_YOUR_STORAGE_BUCKET_HERE",
+      messagingSenderId: "PASTE_YOUR_MESSAGING_SENDER_ID_HERE",
+      appId: "PASTE_YOUR_APP_ID_HERE"
+    };
+
+    const GREEN_QR = "KOSTAS_PARTY_2026_GREEN_ACCESS";
+    const RED_QR = "KOSTAS_PARTY_2026_RED_ACCESS";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const counterRef = doc(db, "party", "counter");
+
+    let html5QrCode = null;
+    let scannerRunning = false;
+    let lastScan = null;
+    let scanLocked = false;
+
+    const greenCount = document.getElementById("greenCount");
+    const redCount = document.getElementById("redCount");
+    const totalCount = document.getElementById("totalCount");
+    const statusBox = document.getElementById("status");
+
+    function setStatus(message, type = "normal") {
+      statusBox.textContent = message;
+      statusBox.className = "status";
+
+      if (type === "success") {
+        statusBox.classList.add("success");
+      }
+
+      if (type === "error") {
+        statusBox.classList.add("error");
+      }
+    }
+
+    async function ensureCounterExists() {
+      await setDoc(counterRef, {
+        green: 0,
+        red: 0,
+        total: 0
+      }, { merge: true });
+    }
+
+    ensureCounterExists();
+
+    onSnapshot(counterRef, (snapshot) => {
+      const data = snapshot.data() || { green: 0, red: 0, total: 0 };
+
+      greenCount.textContent = data.green || 0;
+      redCount.textContent = data.red || 0;
+      totalCount.textContent = data.total || 0;
+    });
+
+    async function addScan(type) {
+      await runTransaction(db, async (transaction) => {
+        const snap = await transaction.get(counterRef);
+        const data = snap.data() || { green: 0, red: 0, total: 0 };
+
+        const green = data.green || 0;
+        const red = data.red || 0;
+        const total = data.total || 0;
+
+        if (type === "green") {
+          transaction.set(counterRef, {
+            green: green + 1,
+            red: red,
+            total: total + 1
+          });
+        }
+
+        if (type === "red") {
+          transaction.set(counterRef, {
+            green: green,
+            red: red + 1,
+            total: total + 1
+          });
+        }
+      });
+
+      lastScan = type;
+    }
+
+    window.undoLastScan = async function () {
+      if (!lastScan) {
+        setStatus("Δεν υπάρχει τελευταίο scan για undo.", "error");
+        return;
+      }
+
+      await runTransaction(db, async (transaction) => {
+        const snap = await transaction.get(counterRef);
+        const data = snap.data() || { green: 0, red: 0, total: 0 };
+
+        let green = data.green || 0;
+        let red = data.red || 0;
+        let total = data.total || 0;
+
+        if (lastScan === "green" && green > 0) {
+          green -= 1;
+          total -= 1;
+        }
+
+        if (lastScan === "red" && red > 0) {
+          red -= 1;
+          total -= 1;
+        }
+
+        transaction.set(counterRef, { green, red, total });
+      });
+
+      setStatus("Έγινε undo στο τελευταίο scan.", "success");
+      lastScan = null;
+    };
+
+    window.resetCounts = async function () {
+      const confirmReset = confirm("Σίγουρα θέλεις reset όλα τα counts;");
+
+      if (!confirmReset) return;
+
+      await setDoc(counterRef, {
+        green: 0,
+        red: 0,
+        total: 0
+      });
+
+      lastScan = null;
+      setStatus("Τα counts μηδενίστηκαν.", "success");
+    };
+
+    async function handleQrScan(decodedText) {
+      if (scanLocked) return;
+      scanLocked = true;
+
+      setTimeout(() => {
+        scanLocked = false;
+      }, 1800);
+
+      if (decodedText === GREEN_QR) {
+        await addScan("green");
+        setStatus("GREEN scan accepted.", "success");
+        return;
+      }
+
+      if (decodedText === RED_QR) {
+        await addScan("red");
+        setStatus("RED scan accepted.", "success");
+        return;
+      }
+
+      setStatus("Άκυρο QR. Δεν μετρήθηκε.", "error");
+    }
+
+    window.startScanner = async function () {
+      if (scannerRunning) {
+        setStatus("Ο scanner τρέχει ήδη.");
+        return;
+      }
+
+      html5QrCode = new Html5Qrcode("reader");
+
+      try {
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 }
+          },
+          handleQrScan
+        );
+
+        scannerRunning = true;
+        setStatus("Scanner ενεργός. Σκάναρε QR.", "success");
+      } catch (error) {
+        console.error(error);
+        setStatus("Δεν άνοιξε η κάμερα. Δώσε camera permission ή δοκίμασε Chrome.", "error");
+      }
+    };
+  </script>
+</body>
+</html>
