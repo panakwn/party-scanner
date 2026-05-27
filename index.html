@@ -192,14 +192,6 @@
       border-color: rgba(248, 113, 113, 0.35);
     }
 
-    #reader {
-      background: white;
-      border-radius: 20px;
-      overflow: hidden;
-      margin: 14px 0;
-      min-height: 0;
-    }
-
     .buttons {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -277,6 +269,116 @@
       background: linear-gradient(135deg, #3b82f6, #1e40af);
     }
 
+    .scanner-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(2, 6, 23, 0.72);
+      backdrop-filter: blur(6px);
+      overflow-y: auto;
+    }
+
+    .scanner-overlay.open {
+      display: flex;
+    }
+
+    .scanner-window {
+      width: 100%;
+      max-width: 560px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 24px;
+      padding: 16px;
+      box-shadow: 0 24px 90px rgba(0, 0, 0, 0.65);
+      margin-top: 10px;
+    }
+
+    .scanner-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .scanner-title {
+      font-weight: 900;
+      font-size: 18px;
+    }
+
+    .close-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      padding: 10px 12px;
+      border-radius: 14px;
+    }
+
+    .mini-counts {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .mini-card {
+      border-radius: 16px;
+      padding: 10px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .mini-card div:first-child {
+      color: #cbd5e1;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      margin-bottom: 4px;
+    }
+
+    .mini-card div:last-child {
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+    .scanner-status {
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+      margin-bottom: 12px;
+      line-height: 1.35;
+    }
+
+    .scanner-status.success {
+      background: rgba(22, 163, 74, 0.22);
+      border-color: rgba(34, 197, 94, 0.35);
+    }
+
+    .scanner-status.error {
+      background: rgba(220, 38, 38, 0.22);
+      border-color: rgba(248, 113, 113, 0.35);
+    }
+
+    #reader {
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      min-height: 0;
+      margin-bottom: 12px;
+    }
+
+    .scanner-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
     @media (max-width: 420px) {
       h1 {
         font-size: 26px;
@@ -289,11 +391,52 @@
       .label {
         font-size: 12px;
       }
+
+      .mini-card div:last-child {
+        font-size: 21px;
+      }
     }
   </style>
 </head>
 <body>
   <div id="notification" class="notification"></div>
+
+  <div id="scannerOverlay" class="scanner-overlay">
+    <div class="scanner-window">
+      <div class="scanner-top">
+        <div class="scanner-title">QR Scanner</div>
+        <button class="close-btn" onclick="closeScannerWindow()">Close</button>
+      </div>
+
+      <div class="mini-counts">
+        <div class="mini-card">
+          <div>FRIENDS</div>
+          <div id="modalGreenCount">0</div>
+        </div>
+        <div class="mini-card">
+          <div>F.O.F</div>
+          <div id="modalRedCount">0</div>
+        </div>
+        <div class="mini-card">
+          <div>TOTAL</div>
+          <div id="modalTotalCount">0</div>
+        </div>
+      </div>
+
+      <div id="scannerStatus" class="scanner-status">Άνοιγμα κάμερας...</div>
+      <div id="reader"></div>
+
+      <div class="decoded-box">
+        <div class="decoded-title">Last QR decoded text</div>
+        <div id="modalDecodedText">Δεν έχει σκαναριστεί ακόμα QR.</div>
+      </div>
+
+      <div class="scanner-actions">
+        <button class="undo-btn" onclick="undoLastScan()">Undo Last</button>
+        <button class="reset-btn" onclick="closeScannerWindow()">Close Scanner</button>
+      </div>
+    </div>
+  </div>
 
   <main class="app">
     <div class="header">
@@ -325,12 +468,10 @@
         <div id="decodedText">Δεν έχει σκαναριστεί ακόμα QR.</div>
       </div>
 
-      <div id="status" class="status">Πάτα Start Scanner και δώσε άδεια στην κάμερα.</div>
-
-      <div id="reader"></div>
+      <div id="status" class="status">Πάτα Open Scanner και δώσε άδεια στην κάμερα.</div>
 
       <div class="buttons">
-        <button class="scan-btn" onclick="startScanner()">Start Scanner</button>
+        <button class="scan-btn" onclick="openScannerWindow()">Open Scanner</button>
         <button class="undo-btn" onclick="undoLastScan()">Undo Last</button>
         <button class="reset-btn" onclick="resetCounts()">Reset</button>
       </div>
@@ -377,9 +518,15 @@
     const greenCount = document.getElementById("greenCount");
     const redCount = document.getElementById("redCount");
     const totalCount = document.getElementById("totalCount");
+    const modalGreenCount = document.getElementById("modalGreenCount");
+    const modalRedCount = document.getElementById("modalRedCount");
+    const modalTotalCount = document.getElementById("modalTotalCount");
     const statusBox = document.getElementById("status");
+    const scannerStatus = document.getElementById("scannerStatus");
     const notification = document.getElementById("notification");
     const decodedTextBox = document.getElementById("decodedText");
+    const modalDecodedTextBox = document.getElementById("modalDecodedText");
+    const scannerOverlay = document.getElementById("scannerOverlay");
 
     function normalizeQrText(text) {
       return String(text || "").trim();
@@ -395,56 +542,58 @@
 
       setTimeout(() => {
         notification.classList.remove("show");
-      }, 1900);
+      }, 1700);
     }
 
     function setStatus(message, type = "normal") {
       statusBox.textContent = message;
       statusBox.className = "status";
-
       if (type === "success") statusBox.classList.add("success");
       if (type === "error") statusBox.classList.add("error");
     }
 
+    function setScannerStatus(message, type = "normal") {
+      scannerStatus.textContent = message;
+      scannerStatus.className = "scanner-status";
+      if (type === "success") scannerStatus.classList.add("success");
+      if (type === "error") scannerStatus.classList.add("error");
+    }
+
     function showDecodedText(text) {
-      decodedTextBox.textContent = text || "Κενό QR / δεν διαβάστηκε κείμενο.";
+      const value = text || "Κενό QR / δεν διαβάστηκε κείμενο.";
+      decodedTextBox.textContent = value;
+      modalDecodedTextBox.textContent = value;
     }
-
-    async function ensureCounterExists() {
-      try {
-        await runTransaction(db, async (transaction) => {
-          const snap = await transaction.get(counterRef);
-
-          // Αν υπάρχει ήδη counter στο Firebase, ΔΕΝ τον πειράζουμε.
-          // Έτσι δεν μηδενίζει όταν κάνεις refresh ή ξανανοίγεις τη σελίδα.
-          if (!snap.exists()) {
-            transaction.set(counterRef, {
-              green: 0,
-              red: 0,
-              total: 0
-            });
-          }
-        });
-      } catch (error) {
-        console.error(error);
-        setStatus(`Firebase error: ${error.message}`, "error");
-      }
-    }
-
-    ensureCounterExists();
 
     onSnapshot(counterRef, (snapshot) => {
-      const data = snapshot.data() || { green: 0, red: 0, total: 0 };
+      if (!snapshot.exists()) {
+        greenCount.textContent = 0;
+        redCount.textContent = 0;
+        totalCount.textContent = 0;
+        modalGreenCount.textContent = 0;
+        modalRedCount.textContent = 0;
+        modalTotalCount.textContent = 0;
+        setStatus("Δεν υπάρχει ακόμα counter στη βάση. Θα δημιουργηθεί στο πρώτο scan.");
+        return;
+      }
 
-      greenCount.textContent = data.green || 0;
-      redCount.textContent = data.red || 0;
-      totalCount.textContent = data.total || 0;
+      const data = snapshot.data();
+      const green = data.green || 0;
+      const red = data.red || 0;
+      const total = data.total || 0;
+
+      greenCount.textContent = green;
+      redCount.textContent = red;
+      totalCount.textContent = total;
+      modalGreenCount.textContent = green;
+      modalRedCount.textContent = red;
+      modalTotalCount.textContent = total;
     });
 
     async function addScan(type) {
       await runTransaction(db, async (transaction) => {
         const snap = await transaction.get(counterRef);
-        const data = snap.data() || { green: 0, red: 0, total: 0 };
+        const data = snap.exists() ? snap.data() : { green: 0, red: 0, total: 0 };
 
         const green = data.green || 0;
         const red = data.red || 0;
@@ -470,16 +619,72 @@
       lastScan = type;
     }
 
+    async function stopScanner() {
+      if (!html5QrCode || !scannerRunning) return;
+
+      try {
+        await html5QrCode.stop();
+        await html5QrCode.clear();
+      } catch (error) {
+        console.error(error);
+      }
+
+      scannerRunning = false;
+      html5QrCode = null;
+      scanLocked = false;
+    }
+
+    window.closeScannerWindow = async function () {
+      await stopScanner();
+      scannerOverlay.classList.remove("open");
+      setStatus("Scanner κλειστός. Πάτα Open Scanner για νέο scan.");
+    };
+
+    window.openScannerWindow = async function () {
+      scannerOverlay.classList.add("open");
+      showDecodedText("Δεν έχει σκαναριστεί ακόμα QR.");
+      setScannerStatus("Άνοιγμα κάμερας...");
+
+      if (scannerRunning) {
+        setScannerStatus("Ο scanner τρέχει ήδη.", "success");
+        return;
+      }
+
+      html5QrCode = new Html5Qrcode("reader");
+
+      try {
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: { width: 260, height: 260 }
+          },
+          handleQrScan
+        );
+
+        scannerRunning = true;
+        showNotification("Scanner started", "info");
+        setScannerStatus("Scanner ενεργός. Σκάναρε QR.", "success");
+        setStatus("Scanner ενεργός μέσα στο παράθυρο.", "success");
+      } catch (error) {
+        console.error(error);
+        showNotification("Camera error", "bad");
+        setScannerStatus("Δεν άνοιξε η κάμερα. Δώσε camera permission ή δοκίμασε Chrome/Safari.", "error");
+        setStatus("Δεν άνοιξε η κάμερα.", "error");
+      }
+    };
+
     window.undoLastScan = async function () {
       if (!lastScan) {
         showNotification("Δεν υπάρχει τελευταίο scan", "bad");
         setStatus("Δεν υπάρχει τελευταίο scan για undo.", "error");
+        setScannerStatus("Δεν υπάρχει τελευταίο scan για undo.", "error");
         return;
       }
 
       await runTransaction(db, async (transaction) => {
         const snap = await transaction.get(counterRef);
-        const data = snap.data() || { green: 0, red: 0, total: 0 };
+        const data = snap.exists() ? snap.data() : { green: 0, red: 0, total: 0 };
 
         let green = data.green || 0;
         let red = data.red || 0;
@@ -500,6 +705,7 @@
 
       showNotification("Undo successful", "info");
       setStatus("Έγινε undo στο τελευταίο scan.", "success");
+      setScannerStatus("Έγινε undo στο τελευταίο scan.", "success");
       lastScan = null;
     };
 
@@ -516,85 +722,69 @@
       lastScan = null;
       showNotification("Counts reset", "info");
       setStatus("Τα counts μηδενίστηκαν.", "success");
+      setScannerStatus("Τα counts μηδενίστηκαν.", "success");
     };
 
     async function handleQrScan(decodedText) {
       const cleanText = normalizeQrText(decodedText);
-
-      // Αυτό εμφανίζει ΠΑΝΤΑ τι διάβασε, είτε είναι σωστό είτε λάθος.
       showDecodedText(cleanText);
 
       if (scanLocked) return;
       scanLocked = true;
 
-      setTimeout(() => {
-        scanLocked = false;
-      }, 1800);
-
       if (cleanText === FRIENDS_QR) {
-        setStatus("Έγκυρο FRIENDS QR. Γίνεται αποθήκευση...", "success");
+        setScannerStatus("Έγκυρο FRIENDS QR. Γίνεται αποθήκευση...", "success");
 
         try {
           await addScan("friends");
           showNotification("✅ VALID FRIENDS QR - +1 άτομο", "ok");
+          setScannerStatus("Έγκυρο FRIENDS QR. Προστέθηκε 1 άτομο. Το παράθυρο κλείνει.", "success");
           setStatus("Έγκυρο FRIENDS QR. Προστέθηκε 1 άτομο.", "success");
+
+          setTimeout(async () => {
+            await stopScanner();
+            scannerOverlay.classList.remove("open");
+          }, 650);
         } catch (error) {
           console.error(error);
+          scanLocked = false;
           showNotification("⚠️ VALID QR αλλά δεν γράφτηκε στη βάση", "bad");
-          setStatus(`Το QR είναι σωστό, αλλά το Firebase δεν το αποθήκευσε: ${error.message}`, "error");
+          setScannerStatus(`Το QR είναι σωστό, αλλά το Firebase δεν το αποθήκευσε: ${error.message}`, "error");
         }
 
         return;
       }
 
       if (cleanText === FRIENDS_OF_FRIENDS_QR) {
-        setStatus("Έγκυρο FRIENDS OF FRIENDS QR. Γίνεται αποθήκευση...", "success");
+        setScannerStatus("Έγκυρο FRIENDS OF FRIENDS QR. Γίνεται αποθήκευση...", "success");
 
         try {
           await addScan("friends_of_friends");
           showNotification("✅ VALID FRIENDS OF FRIENDS QR - +1 άτομο", "ok");
+          setScannerStatus("Έγκυρο FRIENDS OF FRIENDS QR. Προστέθηκε 1 άτομο. Το παράθυρο κλείνει.", "success");
           setStatus("Έγκυρο FRIENDS OF FRIENDS QR. Προστέθηκε 1 άτομο.", "success");
+
+          setTimeout(async () => {
+            await stopScanner();
+            scannerOverlay.classList.remove("open");
+          }, 650);
         } catch (error) {
           console.error(error);
+          scanLocked = false;
           showNotification("⚠️ VALID QR αλλά δεν γράφτηκε στη βάση", "bad");
-          setStatus(`Το QR είναι σωστό, αλλά το Firebase δεν το αποθήκευσε: ${error.message}`, "error");
+          setScannerStatus(`Το QR είναι σωστό, αλλά το Firebase δεν το αποθήκευσε: ${error.message}`, "error");
         }
 
         return;
       }
 
       showNotification("❌ INVALID QR - δεν μετρήθηκε", "bad");
-      setStatus("Άκυρο QR. Το κείμενο εμφανίζεται στο πεδίο Last QR decoded text.", "error");
+      setScannerStatus("Άκυρο QR. Δεν μετρήθηκε. Δοκίμασε άλλο QR.", "error");
+
+      setTimeout(() => {
+        scanLocked = false;
+      }, 1100);
     }
-
-    window.startScanner = async function () {
-      if (scannerRunning) {
-        showNotification("Scanner already running", "info");
-        setStatus("Ο scanner τρέχει ήδη.");
-        return;
-      }
-
-      html5QrCode = new Html5Qrcode("reader");
-
-      try {
-        await html5QrCode.start(
-          { facingMode: "environment" },
-          {
-            fps: 10,
-            qrbox: { width: 260, height: 260 }
-          },
-          handleQrScan
-        );
-
-        scannerRunning = true;
-        showNotification("Scanner started", "info");
-        setStatus("Scanner ενεργός. Σκάναρε QR.", "success");
-      } catch (error) {
-        console.error(error);
-        showNotification("Camera error", "bad");
-        setStatus("Δεν άνοιξε η κάμερα. Δώσε camera permission ή δοκίμασε Chrome/Safari.", "error");
-      }
-    };
   </script>
 </body>
 </html>
