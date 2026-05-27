@@ -547,6 +547,111 @@
         font-size: 21px;
       }
     }
+  
+    /* Darker iOS-style overrides */
+    body {
+      background:
+        radial-gradient(circle at 18% 18%, rgba(37, 99, 235, 0.22), transparent 30%),
+        radial-gradient(circle at 84% 22%, rgba(88, 28, 135, 0.18), transparent 31%),
+        radial-gradient(circle at 18% 86%, rgba(15, 118, 110, 0.14), transparent 31%),
+        radial-gradient(circle at 88% 82%, rgba(127, 29, 29, 0.14), transparent 30%),
+        linear-gradient(135deg, #000000, #05070d 48%, #000000 100%) !important;
+      color: rgba(255, 255, 255, 0.92);
+    }
+
+    body::before {
+      opacity: 0.38 !important;
+      background:
+        linear-gradient(115deg, transparent 0%, rgba(255,255,255,0.035) 42%, transparent 60%),
+        radial-gradient(circle at 58% 38%, rgba(255,255,255,0.055), transparent 24%) !important;
+    }
+
+    .panel,
+    .scanner-window {
+      background:
+        radial-gradient(circle at 50% 20%, rgba(255,255,255,0.055), transparent 30%),
+        linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.025)),
+        rgba(8, 10, 16, 0.82) !important;
+      border-color: rgba(255,255,255,0.10) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.09),
+        inset 0 -1px 0 rgba(255,255,255,0.025),
+        0 28px 95px rgba(0,0,0,0.70) !important;
+    }
+
+    .panel::before,
+    .scanner-window::before {
+      background:
+        radial-gradient(circle at 50% 20%, rgba(255,255,255,0.065), transparent 30%),
+        linear-gradient(115deg, rgba(255,255,255,0.045), transparent 28%, transparent 68%, rgba(255,255,255,0.022)) !important;
+      opacity: 0.85 !important;
+    }
+
+    .badge,
+    .total,
+    .status,
+    .scanner-status,
+    .mini-card,
+    .close-btn {
+      background: linear-gradient(145deg, rgba(255,255,255,0.065), rgba(255,255,255,0.020)) !important;
+      border-color: rgba(255,255,255,0.08) !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 12px 35px rgba(0,0,0,0.22) !important;
+    }
+
+    .count-card {
+      border-color: rgba(255,255,255,0.075) !important;
+      background: rgba(255,255,255,0.035) !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.055), 0 16px 40px rgba(0,0,0,0.28) !important;
+    }
+
+    .friends {
+      background: linear-gradient(145deg, rgba(34,197,94,0.10), rgba(255,255,255,0.022)) !important;
+    }
+
+    .fof {
+      background: linear-gradient(145deg, rgba(239,68,68,0.10), rgba(255,255,255,0.022)) !important;
+    }
+
+    .label,
+    .subtitle,
+    .total span:first-child,
+    .mini-card div:first-child,
+    .status,
+    .scanner-status,
+    .close-btn {
+      color: rgba(235,245,255,0.52) !important;
+    }
+
+    .friends .number {
+      color: rgba(187, 247, 208, 0.90) !important;
+    }
+
+    .fof .number {
+      color: rgba(254, 202, 202, 0.90) !important;
+    }
+
+    .scan-btn {
+      background: linear-gradient(145deg, rgba(59,130,246,0.14), rgba(255,255,255,0.025)) !important;
+      border-color: rgba(96,165,250,0.22) !important;
+      color: rgba(219,234,254,0.94) !important;
+    }
+
+    .undo-btn {
+      background: linear-gradient(145deg, rgba(251,191,36,0.13), rgba(255,255,255,0.025)) !important;
+      border-color: rgba(251,191,36,0.20) !important;
+      color: rgba(254,243,199,0.94) !important;
+    }
+
+    .reset-btn {
+      background: linear-gradient(145deg, rgba(248,113,113,0.13), rgba(255,255,255,0.025)) !important;
+      border-color: rgba(248,113,113,0.20) !important;
+      color: rgba(254,226,226,0.94) !important;
+    }
+
+    #reader {
+      background: rgba(8, 10, 14, 0.92) !important;
+      border-color: rgba(255,255,255,0.10) !important;
+    }
   </style>
 </head>
 <body>
