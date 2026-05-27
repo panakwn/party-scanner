@@ -340,7 +340,7 @@
         return;
       }
 
-      setStatus("Άκυρο QR. Δεν μετρήθηκε.", "error");
+      setStatus(`Άκυρο QR. Διάβασε: ${decodedText}`, "error");
     }
 
     window.startScanner = async function () {
