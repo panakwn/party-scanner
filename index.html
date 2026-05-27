@@ -379,6 +379,10 @@
       gap: 10px;
     }
 
+    .scanner-actions.single-action {
+      grid-template-columns: 1fr;
+    }
+
     @media (max-width: 420px) {
       h1 {
         font-size: 26px;
@@ -431,9 +435,8 @@
         <div id="modalDecodedText">Δεν έχει σκαναριστεί ακόμα QR.</div>
       </div>
 
-      <div class="scanner-actions">
+      <div class="scanner-actions single-action">
         <button class="undo-btn" onclick="undoLastScan()">Undo Last</button>
-        <button class="reset-btn" onclick="closeScannerWindow()">Close Scanner</button>
       </div>
     </div>
   </div>
