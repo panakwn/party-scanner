@@ -519,16 +519,34 @@
       }, 1800);
 
       if (cleanText === FRIENDS_QR) {
-        await addScan("friends");
-        showNotification("✅ VALID FRIENDS QR - +1 άτομο", "ok");
-        setStatus("Έγκυρο FRIENDS QR. Προστέθηκε 1 άτομο.", "success");
+        setStatus("Έγκυρο FRIENDS QR. Γίνεται αποθήκευση...", "success");
+
+        try {
+          await addScan("friends");
+          showNotification("✅ VALID FRIENDS QR - +1 άτομο", "ok");
+          setStatus("Έγκυρο FRIENDS QR. Προστέθηκε 1 άτομο.", "success");
+        } catch (error) {
+          console.error(error);
+          showNotification("⚠️ VALID QR αλλά δεν γράφτηκε στη βάση", "bad");
+          setStatus(`Το QR είναι σωστό, αλλά το Firebase δεν το αποθήκευσε: ${error.message}`, "error");
+        }
+
         return;
       }
 
       if (cleanText === FRIENDS_OF_FRIENDS_QR) {
-        await addScan("friends_of_friends");
-        showNotification("✅ VALID FRIENDS OF FRIENDS QR - +1 άτομο", "ok");
-        setStatus("Έγκυρο FRIENDS OF FRIENDS QR. Προστέθηκε 1 άτομο.", "success");
+        setStatus("Έγκυρο FRIENDS OF FRIENDS QR. Γίνεται αποθήκευση...", "success");
+
+        try {
+          await addScan("friends_of_friends");
+          showNotification("✅ VALID FRIENDS OF FRIENDS QR - +1 άτομο", "ok");
+          setStatus("Έγκυρο FRIENDS OF FRIENDS QR. Προστέθηκε 1 άτομο.", "success");
+        } catch (error) {
+          console.error(error);
+          showNotification("⚠️ VALID QR αλλά δεν γράφτηκε στη βάση", "bad");
+          setStatus(`Το QR είναι σωστό, αλλά το Firebase δεν το αποθήκευσε: ${error.message}`, "error");
+        }
+
         return;
       }
 
