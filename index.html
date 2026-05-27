@@ -146,12 +146,12 @@
 
     <div class="counts">
       <div class="card green">
-        GREEN
+        FRIENDS
         <span id="greenCount" class="number">0</span>
       </div>
 
       <div class="card red">
-        RED
+        FRIENDS OF FRIENDS
         <span id="redCount" class="number">0</span>
       </div>
     </div>
@@ -172,8 +172,8 @@
 
     <div class="small">
       Accepted QR codes:<br>
-      KOSTAS_PARTY_2026_GREEN_ACCESS<br>
-      KOSTAS_PARTY_2026_RED_ACCESS
+      KOSTAS_PARTY_2026_FRIENDS_ACCESS<br>
+      KOSTAS_PARTY_2026_FRIENDS_OF_FRIENDS_ACCESS
     </div>
   </div>
 
@@ -197,8 +197,8 @@
       appId: "1:833511449106:web:f838efac8be7ea0b3c6ecb"
     };
 
-    const GREEN_QR = "KOSTAS_PARTY_2026_GREEN_ACCESS";
-    const RED_QR = "KOSTAS_PARTY_2026_RED_ACCESS";
+    const GREEN_QR = "KOSTAS_PARTY_2026_FRIENDS_ACCESS";
+    const RED_QR = "KOSTAS_PARTY_2026_FRIENDS_OF_FRIENDS_ACCESS";
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -330,13 +330,13 @@
 
       if (decodedText === GREEN_QR) {
         await addScan("green");
-        setStatus("GREEN scan accepted.", "success");
+        setStatus("FRIENDS scan accepted.", "success");
         return;
       }
 
       if (decodedText === RED_QR) {
         await addScan("red");
-        setStatus("RED scan accepted.", "success");
+        setStatus("FRIENDS OF FRIENDS scan accepted.", "success");
         return;
       }
 
