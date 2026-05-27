@@ -411,11 +411,24 @@
     }
 
     async function ensureCounterExists() {
-      await setDoc(counterRef, {
-        green: 0,
-        red: 0,
-        total: 0
-      }, { merge: true });
+      try {
+        await runTransaction(db, async (transaction) => {
+          const snap = await transaction.get(counterRef);
+
+          // Αν υπάρχει ήδη counter στο Firebase, ΔΕΝ τον πειράζουμε.
+          // Έτσι δεν μηδενίζει όταν κάνεις refresh ή ξανανοίγεις τη σελίδα.
+          if (!snap.exists()) {
+            transaction.set(counterRef, {
+              green: 0,
+              red: 0,
+              total: 0
+            });
+          }
+        });
+      } catch (error) {
+        console.error(error);
+        setStatus(`Firebase error: ${error.message}`, "error");
+      }
     }
 
     ensureCounterExists();
